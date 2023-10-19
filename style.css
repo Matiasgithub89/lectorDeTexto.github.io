@@ -1,0 +1,20 @@
+/* Resetear algunos estilos por defecto del navegador */
+body, h1, p {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    text-align: center;
+}
+
+h1 {
+    color: #007BFF;
+}
+
+p {
+    margin-top: 10px;
+}
