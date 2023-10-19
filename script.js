@@ -23,6 +23,11 @@ function procesarTexto() {
         cardBody.appendChild(buttonLeer);
         card.appendChild(cardBody);
         outputContainer.appendChild(card);
+
+        // Agregar evento de clic para la lectura
+        buttonLeer.addEventListener('click', function () {
+            leerTexto(fragmento, "es-ES"); // Cambia "es-ES" al código de idioma deseado
+        });
     });
 }
 
@@ -36,24 +41,12 @@ function splitTextIntoChunks(texto, chunkSize) {
 }
 
 // Función para activar la lectura de un fragmento de texto
-function leerTexto(fragmento) {
+function leerTexto(fragmento, idioma) {
     var synth = window.speechSynthesis;
     var mensaje = new SpeechSynthesisUtterance(fragmento);
+
+    // Configurar el idioma
+    mensaje.lang = idioma;
+
     synth.speak(mensaje);
 }
-
-document.addEventListener('DOMContentLoaded', function () {
-    // Asigna un evento de clic a los botones de lectura
-    var buttons = document.querySelectorAll('.btn-leer');
-
-    buttons.forEach(function (button, index) {
-        button.addEventListener('click', function () {
-            // Encuentra el fragmento de texto asociado al botón
-            var cardText = this.parentNode.querySelector('.card-text');
-            var fragmento = cardText.textContent;
-            
-            // Llama a la función para leer el fragmento
-            leerTexto(fragmento);
-        });
-    });
-});
