@@ -80,22 +80,30 @@ function detenerLectura() {
     }
 }
 
+var lecturaPausada = false;
+
 function pausarLectura() {
     if (currentUtterance && synth.speaking) {
         synth.pause();
+        lecturaPausada = true;
+        console.log('Lectura en pausa');
     }
 }
 
 function reanudarLectura() {
-    if (currentUtterance && synth.paused) {
-        // Reanudar la lectura desde la posición actual
-        synth.resume();
-    } else if (fragmentos.length > 0) {
-        // Si no se ha pausado previamente y quedan fragmentos, continuar con el siguiente fragmento
-        leerSiguienteFragmento();
+    console.log('Intentando reanudar lectura');
+    if (currentUtterance) {
+        if (lecturaPausada) {
+            synth.resume();
+            lecturaPausada = false;
+            console.log('Lectura reanudada');
+        } else if (synth.speaking) {
+            // Si no se ha pausado previamente y quedan fragmentos, continuar con el siguiente fragmento
+            console.log('Continuando con el siguiente fragmento');
+            leerSiguienteFragmento();
+        }
     }
 }
-
 function aumentarVelocidadLectura() {
     if (currentUtterance) {
         currentUtterance.rate += 0.5;
