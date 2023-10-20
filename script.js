@@ -1,52 +1,103 @@
-function procesarTexto() {
-    var texto = document.getElementById('inputTexto').value;
-    var fragmentos = splitTextIntoChunks(texto, 1000);
-    var outputContainer = document.getElementById('outputContainer');
-    outputContainer.innerHTML = '';
+document.addEventListener('DOMContentLoaded', function () {
+    var voiceSelect = document.getElementById('voiceSelect');
+    var synth = window.speechSynthesis;
 
-    fragmentos.forEach(function (fragmento, index) {
-        var card = document.createElement('div');
-        card.className = 'card mb-3';
+    // Función para llenar el selector de voces
+    function loadVoices() {
+        var voices = synth.getVoices();
 
-        var cardBody = document.createElement('div');
-        cardBody.className = 'card-body';
+        // Limpia el selector de voces
+        voiceSelect.innerHTML = '';
 
-        var cardText = document.createElement('p');
-        cardText.className = 'card-text';
-        cardText.textContent = fragmento;
-
-        var buttonLeer = document.createElement('button');
-        buttonLeer.className = 'btn btn-primary btn-leer';
-        buttonLeer.textContent = 'Leer';
-        
-        cardBody.appendChild(cardText);
-        cardBody.appendChild(buttonLeer);
-        card.appendChild(cardBody);
-        outputContainer.appendChild(card);
-
-        // Agregar evento de clic para la lectura
-        buttonLeer.addEventListener('click', function () {
-            leerTexto(fragmento, "es-ES"); // Cambia "es-ES" al código de idioma deseado
+        // Llena el selector con las voces disponibles
+        voices.forEach(function (voz, index) {
+            var option = document.createElement('option');
+            option.value = index;
+            option.textContent = voz.name;
+            voiceSelect.appendChild(option);
         });
-    });
+    }
+
+    // Esperar a que las voces se carguen antes de llenar el selector
+    synth.onvoiceschanged = loadVoices;
+});
+
+var textoCompleto = "";
+var synth = window.speechSynthesis;
+var currentUtterance = null;
+var fragmentos = []; // Almacenar fragmentos de texto
+
+function leerTextoAutomatico() {
+    textoCompleto = document.getElementById('inputTexto').value;
+    fragmentos = splitTextIntoChunks(textoCompleto, 200); // Dividir en fragmentos de 200 caracteres
+    leerSiguienteFragmento();
 }
 
-// Función para dividir el texto en fragmentos de un tamaño dado
 function splitTextIntoChunks(texto, chunkSize) {
+    var palabras = texto.split(' '); // Dividir el texto en palabras
     var result = [];
-    for (var i = 0; i < texto.length; i += chunkSize) {
-        result.push(texto.substring(i, i + chunkSize));
+    var currentChunk = '';
+
+    for (var i = 0; i < palabras.length; i++) {
+        if ((currentChunk + palabras[i]).length <= chunkSize) {
+            currentChunk += palabras[i] + ' ';
+        } else {
+            result.push(currentChunk.trim()); // Agregar fragmento anterior
+            currentChunk = palabras[i] + ' '; // Comenzar un nuevo fragmento
+        }
     }
+
+    // Agregar el último fragmento si no está vacío
+    if (currentChunk.trim() !== '') {
+        result.push(currentChunk.trim());
+    }
+
     return result;
 }
 
-// Función para activar la lectura de un fragmento de texto
-function leerTexto(fragmento, idioma) {
-    var synth = window.speechSynthesis;
-    var mensaje = new SpeechSynthesisUtterance(fragmento);
+function leerSiguienteFragmento() {
+    if (fragmentos.length > 0) {
+        var fragmento = fragmentos.shift();
+        var mensaje = new SpeechSynthesisUtterance(fragmento);
+        var voiceSelect = document.getElementById('voiceSelect');
+        var selectedVoice = synth.getVoices()[voiceSelect.value];
+        mensaje.voice = selectedVoice;
+        currentUtterance = mensaje;
 
-    // Configurar el idioma
-    mensaje.lang = idioma;
+        // Configurar un evento de finalización para continuar con el siguiente fragmento
+        mensaje.onend = function () {
+            leerSiguienteFragmento();
+        };
 
-    synth.speak(mensaje);
+        synth.speak(mensaje);
+    }
+}
+
+function detenerLectura() {
+    if (currentUtterance) {
+        synth.cancel();
+        fragmentos = []; // Detener y borrar fragmentos restantes
+    }
+}
+
+function pausarLectura() {
+    if (currentUtterance && synth.speaking) {
+        synth.pause();
+    }
+}
+
+function reanudarLectura() {
+    if (currentUtterance && synth.paused) {
+        // Reanudar la lectura desde la posición actual
+        synth.resume();
+    } else if (fragmentos.length > 0) {
+        // Si no se ha pausado previamente y quedan fragmentos, continuar con el siguiente fragmento
+        leerSiguienteFragmento();
+    }
+}
+
+function aumentarVelocidadLectura() {
+    if (currentUtterance) {
+        currentUtterance.rate += 0.5;
+    }
 }
